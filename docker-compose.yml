@@ -1,8 +1,6 @@
-version: '3.2'
-
 services:
-
   frontend:
+    container_name: yii2_frontend
     build: frontend
     ports:
       - 20080:80
@@ -11,8 +9,11 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       # Mount source-code for development
       - ./:/app
+    networks:
+      - yii2_network
 
   backend:
+    container_name: yii2_backend
     build: backend
     ports:
       - 21080:80
@@ -21,14 +22,24 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       # Mount source-code for development
       - ./:/app
+    networks:
+      - yii2_network
 
   mysql:
+    container_name: yii2_mysql
     image: mysql:5.7
+    ports:
+      - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=verysecret
       - MYSQL_DATABASE=yii2advanced
       - MYSQL_USER=yii2advanced
       - MYSQL_PASSWORD=secret
+    volumes:
+      # Use a named volume to persist database data
+      - yii2_mysql:/var/lib/mysql
+    networks:
+      - yii2_network
 
   #pgsql:
   #  image: postgres:9.5
@@ -36,3 +47,23 @@ services:
   #    - POSTGRES_DB=yii2advanced
   #    - POSTGRES_USER=yii2advanced
   #    - POSTGRES_PASSWORD=secret
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: yii2_phpmyadmin
+    ports:
+      - 889:80
+    environment:
+      #- PMA_ARBITRARY=1
+      PMA_HOST: yii2_mysql
+      PMA_USER: root
+      PMA_PASSWORD: verysecret
+      UPLOAD_LIMIT: 1000M
+    networks:
+      - yii2_network
+
+volumes:
+  yii2_mysql:
+
+networks:
+  yii2_network:
